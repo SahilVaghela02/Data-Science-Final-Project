@@ -1,0 +1,35 @@
+# Importing necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Loading datasets
+gpu_specs_df = pd.read_csv('gpu_specs_v6.csv')
+gpu_benchmarks_df = pd.read_csv('GPU_scores_graphicsAPIs.csv')
+
+# Step 1: Data Overview and Basic Summary
+print("GPU Specifications Dataset Overview")
+print(gpu_specs_df.head())
+print(gpu_specs_df.info())
+print("GPU Benchmarks Dataset Overview")
+print(gpu_benchmarks_df.head())
+print(gpu_benchmarks_df.info())
+
+# Step 2: Data Cleaning
+# Check for missing values
+print("Missing values in GPU Specs dataset:\n", gpu_specs_df.isnull().sum())
+print("Missing values in GPU Benchmarks dataset:\n",
+      gpu_benchmarks_df.isnull().sum())
+
+# Drop duplicates if any
+gpu_specs_df = gpu_specs_df.drop_duplicates()
+gpu_benchmarks_df = gpu_benchmarks_df.drop_duplicates()
+
+# Step 3: Categorical Data Analysis
+# Analyze 'manufacturer' and 'memType' distributions
+plt.figure(figsize=(10, 5))
+sns.countplot(data=gpu_specs_df, x='manufacturer')
+plt.title("Distribution of GPUs by Manufacturer")
+plt.show()
+
