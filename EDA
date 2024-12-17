@@ -1,30 +1,48 @@
-# Importing necessary libraries
+from xgboost import XGBRegressor
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import learning_curve
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from sklearn.model_selection import train_test_split
+from fuzzywuzzy import fuzz
+import xgboost as xgb
+import warnings
 
-# Loading datasets
-gpu_specs_df = pd.read_csv('gpu_specs_v6.csv')
-gpu_benchmarks_df = pd.read_csv('GPU_scores_graphicsAPIs.csv')
+warnings.filterwarnings("ignore")
 
-# Step 1: Data Overview and Basic Summary
-print("GPU Specifications Dataset Overview")
-print(gpu_specs_df.head())
-print(gpu_specs_df.info())
-print("GPU Benchmarks Dataset Overview")
-print(gpu_benchmarks_df.head())
-print(gpu_benchmarks_df.info())
+# Step 1: Load the Datasets
+gpu_specs = pd.read_csv('gpu_specs_v6.csv')
+benchmarks = pd.read_csv('GPU_scores_graphicsAPIs.csv')
 
-# Step 2: Data Cleaning
-# Check for missing values
-print("Missing values in GPU Specs dataset:\n", gpu_specs_df.isnull().sum())
-print("Missing values in GPU Benchmarks dataset:\n",
-      gpu_benchmarks_df.isnull().sum())
+# ---- DATASET 1: GPU SPECS ----
+# Step 2A: Clean GPU Specs Dataset
+gpu_specs['manufacturer'] = gpu_specs['manufacturer'].str.strip().str.lower()
+gpu_specs = gpu_specs[gpu_specs['manufacturer']
+                      == 'nvidia']  # Filter for NVIDIA GPUs
+gpu_specs.drop(columns=['manufacturer'], inplace=True)
 
-# Drop duplicates if any
-gpu_specs_df = gpu_specs_df.drop_duplicates()
-gpu_benchmarks_df = gpu_benchmarks_df.drop_duplicates()
+# Handle missing values
+numerical_columns = ['memSize', 'memBusWidth', 'gpuClock', 'memClock']
+gpu_specs[numerical_columns] = gpu_specs[numerical_columns].fillna(
+    gpu_specs[numerical_columns].median()
+)
+gpu_specs['memType'] = gpu_specs['memType'].fillna(
+    gpu_specs['memType'].mode()[0])
+
+# Map memory types to simplified categories
+mem_type_mapping = {
+    'GDDR5': 'GDDR5', 'GDDR5X': 'GDDR5',
+    'GDDR6': 'GDDR6', 'GDDR6X': 'GDDR6',
+    'HBM2': 'HBM2', 'HBM': 'HBM'
+}
+gpu_specs['memType'] = gpu_specs['memType'].map(
+    mem_type_mapping).fillna('Other')
 
 # Step 3: Categorical Data Analysis
 # Analyze 'manufacturer' and 'memType' distributions
