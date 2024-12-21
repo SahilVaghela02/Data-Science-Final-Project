@@ -21,6 +21,12 @@ gpu_specs = pd.read_csv('gpu_specs_v6.csv')
 benchmarks = pd.read_csv('GPU_scores_graphicsAPIs.csv')
 
 # ---- DATASET 1: GPU SPECS ----
+print("\n--- GPU Specs Dataset Overview ---")
+print("Shape of GPU Specs Dataset:", gpu_specs.shape)
+print("Columns in GPU Specs Dataset:", gpu_specs.columns.tolist())
+print("First 5 rows of GPU Specs Dataset:\n", gpu_specs.head())
+print("\nMissing Values in GPU Specs Dataset:\n", gpu_specs.isnull().sum())
+
 # Step 2A: Clean GPU Specs Dataset
 gpu_specs['manufacturer'] = gpu_specs['manufacturer'].str.strip().str.lower()
 gpu_specs = gpu_specs[gpu_specs['manufacturer']
