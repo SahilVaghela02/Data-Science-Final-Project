@@ -41,6 +41,15 @@ gpu_specs[numerical_columns] = gpu_specs[numerical_columns].fillna(
 gpu_specs['memType'] = gpu_specs['memType'].fillna(
     gpu_specs['memType'].mode()[0])
 
+# Print values used to fill missing data
+print("\n--- Missing Value Handling in GPU Specs ---")
+for col in numerical_columns:
+    print(
+        f"Filled missing values in {col} with median value: {gpu_specs[col].median()}")
+print(
+    f"Filled missing values in 'memType' with mode: {gpu_specs['memType'].mode()[0]}")
+
+
 # Map memory types to simplified categories
 mem_type_mapping = {
     'GDDR5': 'GDDR5', 'GDDR5X': 'GDDR5',
