@@ -59,6 +59,41 @@ mem_type_mapping = {
 gpu_specs['memType'] = gpu_specs['memType'].map(
     mem_type_mapping).fillna('Other')
 
+# Encode memory type for analysis
+label_encoder_specs = LabelEncoder()
+gpu_specs['memType_encoded'] = label_encoder_specs.fit_transform(
+    gpu_specs['memType'])
+
+# Feature engineering: Calculate memory bandwidth
+gpu_specs['memoryBandwidth_GBs'] = (
+    gpu_specs['memBusWidth'] * gpu_specs['memClock'] * 2 / 8
+)
+
+# ---- DATASET 2: BENCHMARKS ----
+print("\n--- Benchmarks Dataset Overview ---")
+print("Shape of Benchmarks Dataset:", benchmarks.shape)
+print("Columns in Benchmarks Dataset:", benchmarks.columns.tolist())
+print("First 5 rows of Benchmarks Dataset:\n", benchmarks.head())
+print("\nMissing Values in Benchmarks Dataset:\n", benchmarks.isnull().sum())
+
+# Step 2B: Clean Benchmarks Dataset
+benchmarks['Manufacturer'] = benchmarks['Manufacturer'].str.strip().str.lower()
+benchmarks = benchmarks[benchmarks['Manufacturer']
+                        == 'nvidia']  # Filter for NVIDIA GPUs
+
+# Fill missing CUDA and OpenCL values in benchmarks dataset
+benchmarks['CUDA'] = benchmarks['CUDA'].fillna(benchmarks['CUDA'].median())
+benchmarks['OpenCL'] = benchmarks['OpenCL'].fillna(
+    benchmarks['OpenCL'].median())
+
+# Print values used to fill missing data
+print("\n--- Missing Value Handling in Benchmarks ---")
+print(
+    f"Filled missing values in 'CUDA' with median value: {benchmarks['CUDA'].median()}")
+print(
+    f"Filled missing values in 'OpenCL' with median value: {benchmarks['OpenCL'].median()}")
+
+
 # Step 3: Categorical Data Analysis
 # Analyze 'manufacturer' and 'memType' distributions
 plt.figure(figsize=(10, 5))
