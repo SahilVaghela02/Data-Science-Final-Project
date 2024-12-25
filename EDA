@@ -93,42 +93,35 @@ print(
 print(
     f"Filled missing values in 'OpenCL' with median value: {benchmarks['OpenCL'].median()}")
 
+# ---- STEP 3: MATCH AND COMBINE DATASETS ----
+# Fuzzy matching function
+def fuzzy_match(row, choices, threshold=80):
+    best_match = None
+    best_score = 0
+    for choice in choices:
+        score = fuzz.token_sort_ratio(row, choice)
+        if score > best_score and score >= threshold:
+            best_score = score
+            best_match = choice
+    return best_match
 
-# Step 3: Categorical Data Analysis
-# Analyze 'manufacturer' and 'memType' distributions
-plt.figure(figsize=(10, 5))
-sns.countplot(data=gpu_specs_df, x='manufacturer')
-plt.title("Distribution of GPUs by Manufacturer")
-plt.show()
 
-# Check for missing values
-gpu_specs_df['memSize'] = gpu_specs_df['memSize'].fillna(
-    gpu_specs_df['memSize'].median())
-gpu_specs_df['gpuClock'] = gpu_specs_df['gpuClock'].fillna(
-    gpu_specs_df['gpuClock'].median())
-gpu_benchmarks_df['CUDA'] = gpu_benchmarks_df['CUDA'].fillna(0)
-gpu_benchmarks_df['OpenCL'] = gpu_benchmarks_df['OpenCL'].fillna(0)
+# Extract unique device names
+gpu_specs_products = gpu_specs['productName'].unique()
+benchmarks_devices = benchmarks['Device'].unique()
 
-# Remove duplicates
-gpu_specs_df = gpu_specs_df.drop_duplicates()
-gpu_benchmarks_df = gpu_benchmarks_df.drop_duplicates()
+# Perform fuzzy matching for product names
+gpu_specs['matched_device'] = gpu_specs['productName'].apply(
+    lambda x: fuzzy_match(x, benchmarks_devices)
+)
 
-# Standardize GPU names for merging
-gpu_specs_df['productName'] = gpu_specs_df['productName'].str.strip().str.lower()
-gpu_benchmarks_df['Device'] = gpu_benchmarks_df['Device'].str.strip(
-).str.lower()
+# Select only relevant columns before merging
+gpu_specs_relevant_columns = ['productName', 'memSize', 'memBusWidth',
+                              'gpuClock', 'memClock', 'memType', 'memoryBandwidth_GBs', 'matched_device']
+benchmarks_relevant_columns = ['Device', 'CUDA', 'OpenCL']
 
-# Map memory types for better grouping
-mem_type_mapping = {
-    'GDDR5': 'GDDR5/GDDR5X', 'GDDR5X': 'GDDR5/GDDR5X',
-    'GDDR6': 'GDDR6/GDDR6X', 'GDDR6X': 'GDDR6/GDDR6X',
-    'HBM2': 'HBM2', 'HBM': 'HBM2'
-}
-gpu_specs_df['memType'] = gpu_specs_df['memType'].map(
-    mem_type_mapping).fillna('Other')
-
-# Step 2: Feature Engineering
-# Add memory bandwidth and log transform of memory size
-gpu_specs_df['memory_bandwidth'] = gpu_specs_df['memBusWidth'] * \
-    gpu_specs_df['memClock']
-gpu_specs_df['log_memSize'] = np.log1p(gpu_specs_df['memSize'])
+# Merge datasets on matched device names
+combined_data = pd.merge(
+    gpu_specs[gpu_specs_relevant_columns], benchmarks[benchmarks_relevant_columns],
+    left_on='matched_device', right_on='Device', how='inner'
+)
