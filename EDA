@@ -125,3 +125,97 @@ combined_data = pd.merge(
     gpu_specs[gpu_specs_relevant_columns], benchmarks[benchmarks_relevant_columns],
     left_on='matched_device', right_on='Device', how='inner'
 )
+
+# Drop the 'matched_device' and 'Device' columns, if needed
+combined_data.drop(columns=['matched_device', 'Device'], inplace=True)
+
+# ---- OVERVIEW OF COMBINED DATASET ----
+print("\n--- Combined Dataset Overview ---")
+print("Shape of Combined Dataset:", combined_data.shape)
+print("Columns in Combined Dataset:", combined_data.columns.tolist())
+print("First 5 rows of Combined Dataset:\n", combined_data.head())
+print("\nMissing Values in Combined Dataset:\n", combined_data.isnull().sum())
+
+
+# Ensure memType exists in the final merged dataset
+print("Columns in the merged dataset:", combined_data.columns)
+
+# Save the final combined dataset to a CSV
+combined_data.to_csv('combined_gpu_data_with_benchmarks2.csv', index=False)
+
+# ---- STEP 4: EXPLORATORY DATA ANALYSIS ----
+sns.set_theme(style="whitegrid")
+
+# Enhanced: Distribution of Memory Size
+plt.figure(figsize=(14, 8))  # Slightly larger for better readability
+
+# Histogram with KDE
+sns.histplot(
+    combined_data['memSize'],
+    bins=20,  # Smaller bin width for more granularity
+    kde=True,
+    color='skyblue',
+    edgecolor='black',
+    linewidth=1.2
+)
+
+# Title and Axes Labels
+plt.title('Frequency Distribution of GPU Memory Sizes (in GB)',
+          fontsize=20, pad=15)
+plt.xlabel('Memory Size (GB)', fontsize=16, labelpad=10)
+plt.ylabel('Count', fontsize=16, labelpad=10)
+
+# X-Axis and Y-Axis Ticks
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+
+# Annotations for Key Insights
+plt.axvline(x=10, color='red', linestyle='--', linewidth=1.5,
+            label='Common Memory Limit (10 GB)')
+plt.text(11, plt.ylim()[1]*0.8, 'Most devices <10 GB',
+         color='red', fontsize=12)
+
+# Highlighting outliers
+plt.axvline(x=50, color='green', linestyle='--', linewidth=1.5,
+            label='High-Capacity Devices (50+ GB)')
+plt.text(51, plt.ylim()[1]*0.5, 'Outliers (50+ GB)',
+         color='green', fontsize=12)
+
+# Adding a Legend
+plt.legend(fontsize=12, title='Annotations',
+           title_fontsize=14, loc='upper right')
+
+# Adding Grid for readability
+plt.grid(visible=True, linestyle='--', linewidth=0.5, alpha=0.7)
+
+# Tight Layout for cleaner spacing
+plt.tight_layout()
+
+# Display the plot
+plt.show()
+
+
+# Create a count plot by grouping by memType and memBusWidth
+plt.figure(figsize=(12, 7))
+sns.barplot(x='memBusWidth', hue='memType', data=gpu_specs, palette='viridis')
+plt.title('Memory Bus Width Frequency by Memory Type',
+          fontsize=18, fontweight='bold')
+plt.xlabel('Memory Bus Width (bits)', fontsize=14)
+plt.ylabel('Count', fontsize=14)
+plt.xticks(fontsize=12, rotation=45)
+plt.yticks(fontsize=12)
+plt.tight_layout()
+plt.show()
+
+# Memory Type Distribution
+plt.figure(figsize=(12, 7))
+sns.countplot(data=gpu_specs, x='memType',
+              palette='viridis', edgecolor='black')
+plt.title('Distribution of Memory Types', fontsize=18, fontweight='bold')
+plt.xlabel('Memory Type', fontsize=14)
+plt.ylabel('Count', fontsize=14)
+plt.xticks(fontsize=12, rotation=45)
+plt.yticks(fontsize=12)
+plt.tight_layout()
+plt.show()
+
