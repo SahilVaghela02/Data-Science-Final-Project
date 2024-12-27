@@ -55,6 +55,7 @@ mem_type_mapping = {
     'GDDR5': 'GDDR5', 'GDDR5X': 'GDDR5',
     'GDDR6': 'GDDR6', 'GDDR6X': 'GDDR6',
     'HBM2': 'HBM2', 'HBM': 'HBM'
+    'DDR4': 'DDR4'
 }
 gpu_specs['memType'] = gpu_specs['memType'].map(
     mem_type_mapping).fillna('Other')
@@ -216,6 +217,95 @@ plt.xlabel('Memory Type', fontsize=14)
 plt.ylabel('Count', fontsize=14)
 plt.xticks(fontsize=12, rotation=45)
 plt.yticks(fontsize=12)
+plt.tight_layout()
+plt.show()
+
+# List of unique memory types
+memory_types = gpu_specs['memType'].unique()
+
+# Set up the plot size
+plt.figure(figsize=(12, 7))
+
+# Loop through each memory type and plot a scatterplot for each
+for mem_type in memory_types:
+    # Filter the data for the specific memory type
+    filtered_data = gpu_specs[gpu_specs['memType'] == mem_type]
+
+    # Create a scatterplot for each memory type
+    plt.figure(figsize=(12, 7))
+    sns.scatterplot(data=filtered_data, x='memClock',
+                    y='memSize', s=100, alpha=0.8)
+    plt.title(
+        f'Memory Clock Speed vs. Memory Size for {mem_type}', fontsize=18, fontweight='bold')
+    plt.xlabel('Memory Clock Speed (MHz)', fontsize=14)
+    plt.ylabel('Memory Size (GB)', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.grid(True, linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    plt.show()
+
+# List of specific GPUs to filter
+selected_gpus = ['GeForce RTX 4090', 'GeForce RTX 3090', 'GeForce RTX 2080',
+                 'GeForce GTX 1080', 'A100 PCIe 80 GB']  # Example GPU names
+
+# Filter the combined dataset for the selected GPUs
+filtered_data = combined_data[combined_data['productName'].isin(selected_gpus)]
+
+# Print the filtered data to see if all selected GPUs are included
+print(filtered_data[['productName', 'memSize', 'CUDA', 'OpenCL']])
+
+# Check if the filtered data contains all selected GPUs and the expected memory sizes
+print("Filtered data shape:", filtered_data.shape)
+print("Product names in filtered data:", filtered_data['productName'].values)
+
+# Select only the relevant columns for visualization (memory size and benchmark scores)
+filtered_data = filtered_data[['productName', 'memSize', 'CUDA', 'OpenCL']]
+
+# Melt the filtered data for easier plotting
+filtered_data_melted = filtered_data.melt(
+    id_vars=['productName', 'memSize'], var_name='Benchmark', value_name='Score')
+
+# Check the resulting melted data to see if all the GPU data has been correctly transformed
+print("Melted data:", filtered_data_melted)
+
+# Create a bar chart
+plt.figure(figsize=(14, 8))
+sns.barplot(
+    data=filtered_data_melted,
+    x='memSize',  # x-axis shows memory size
+    y='Score',    # y-axis shows the benchmark score
+    hue='Benchmark',  # Use 'Benchmark' to differentiate between CUDA and OpenCL
+    palette='coolwarm',
+    edgecolor='black'
+)
+
+# Adding titles and labels
+plt.title('CUDA and OpenCL Benchmarks for Selected GPUs',
+          fontsize=18, fontweight='bold')
+plt.xlabel('Memory Size (GB)', fontsize=14)
+plt.ylabel('Benchmark Score', fontsize=14)
+
+# Adding grid for readability
+plt.grid(visible=True, linestyle='--', alpha=0.6)
+
+# Adjusting ticks and layout
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.legend(title='Benchmark', title_fontsize=14,
+           fontsize=12, loc='upper right')
+plt.tight_layout()
+
+# Display the plot
+plt.show()
+
+# Correlation Matrix
+plt.figure(figsize=(10, 7))
+correlation_matrix = gpu_specs[[
+    'memSize', 'memBusWidth', 'gpuClock', 'memClock']].corr()
+sns.heatmap(correlation_matrix, annot=True,
+            cmap='coolwarm', fmt='.2f', linewidths=1)
+plt.title('Correlation Matrix for Numerical Features', fontsize=18)
 plt.tight_layout()
 plt.show()
 
