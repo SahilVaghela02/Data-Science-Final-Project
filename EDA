@@ -245,67 +245,90 @@ for mem_type in memory_types:
     plt.tight_layout()
     plt.show()
 
-# List of specific GPUs to filter
+# List of selected GPUs
 selected_gpus = ['GeForce RTX 4090', 'GeForce RTX 3090', 'GeForce RTX 2080',
-                 'GeForce GTX 1080', 'A100 PCIe 80 GB']  # Example GPU names
+                 'GeForce GTX 1080', 'Tesla V100S PCIe 32 GB']  # Example GPU names
 
 # Filter the combined dataset for the selected GPUs
 filtered_data = combined_data[combined_data['productName'].isin(selected_gpus)]
 
-# Print the filtered data to see if all selected GPUs are included
-print(filtered_data[['productName', 'memSize', 'CUDA', 'OpenCL']])
+# Select only the relevant columns for visualization (memory type, benchmark scores)
+filtered_data = filtered_data[['productName', 'memSize', 'memType', 'CUDA', 'OpenCL']]
 
-# Check if the filtered data contains all selected GPUs and the expected memory sizes
-print("Filtered data shape:", filtered_data.shape)
-print("Product names in filtered data:", filtered_data['productName'].values)
-
-# Select only the relevant columns for visualization (memory size and benchmark scores)
-filtered_data = filtered_data[['productName', 'memSize', 'CUDA', 'OpenCL']]
-
-# Melt the filtered data for easier plotting
+# Melt the filtered data for easier plotting (keep product name and memory type as id_vars)
 filtered_data_melted = filtered_data.melt(
-    id_vars=['productName', 'memSize'], var_name='Benchmark', value_name='Score')
+    id_vars=['productName', 'memSize', 'memType'], var_name='Benchmark', value_name='Score')
 
-# Check the resulting melted data to see if all the GPU data has been correctly transformed
-print("Melted data:", filtered_data_melted)
+# Function to annotate memory size and memory type with adjusted vertical space
+def annotate_gpu_info(ax, gpu_name, memory_size, memory_type, x_pos, y_pos):
+    # Display the memory size above the first bar (CUDA) with an increased offset
+    ax.text(x_pos, y_pos + 10000,  # Increased offset for memory size
+            f"{memory_size} GB",  # Display memory size
+            ha='center', fontsize=10, color='black', fontweight='bold')
+    
+    # Display the memory type slightly further above the memory size
+    ax.text(x_pos, y_pos + 16000,  # Further increased offset for memory type
+            f"{memory_type}",  # Display memory type
+            ha='center', fontsize=10, color='black', fontweight='bold')
 
 # Create a bar chart
-plt.figure(figsize=(14, 8))
-sns.barplot(
+plt.figure(figsize=(14, 8))  # Increase figure size to give more space
+
+# Plot the data (memory size, memory type, and benchmark scores)
+ax = sns.barplot(
     data=filtered_data_melted,
-    x='memSize',  # x-axis shows memory size
-    y='Score',    # y-axis shows the benchmark score
-    hue='Benchmark',  # Use 'Benchmark' to differentiate between CUDA and OpenCL
-    palette='coolwarm',
+    x='productName',  # x-axis shows product names (GPUs)
+    y='Score',        # y-axis shows the benchmark score
+    hue='Benchmark',  # Differentiate between CUDA and OpenCL
+    palette='coolwarm',  # Optional: color palette
     edgecolor='black'
 )
 
-# Adding titles and labels
-plt.title('CUDA and OpenCL Benchmarks for Selected GPUs',
-          fontsize=18, fontweight='bold')
-plt.xlabel('Memory Size (GB)', fontsize=14)
+# Add memory size and memory type annotations only once for each GPU
+seen_gpus = set()  # Track GPUs we've already annotated
+for i, row in filtered_data_melted.iterrows():
+    gpu_name = row['productName']
+    memory_size = row['memSize']
+    memory_type = row['memType']
+    y_pos = row['Score']
+    
+    # Only add annotations once for each GPU
+    if gpu_name not in seen_gpus:
+        # Get the x position for the first bar of each GPU (CUDA bar is always first)
+        x_pos = filtered_data_melted[filtered_data_melted['productName'] == gpu_name].index[0]
+        
+        # Call the function to annotate both memory size and memory type with an increased gap
+        annotate_gpu_info(ax, gpu_name, memory_size, memory_type, x_pos, y_pos)
+        
+        # Mark this GPU as annotated
+        seen_gpus.add(gpu_name)
+
+# Adjust y-axis limit to avoid overlap with title
+max_score = filtered_data_melted['Score'].max()
+ax.set_ylim(0, max_score + 30000)  # Give more space at the top (30000 is an arbitrary number)
+
+# Adding titles and labels with additional padding
+plt.title('Benchmark Scores for Selected GPUs (CUDA and OpenCL)', fontsize=18, fontweight='bold', pad=20)
+plt.xlabel('GPU Name', fontsize=14)
 plt.ylabel('Benchmark Score', fontsize=14)
 
 # Adding grid for readability
 plt.grid(visible=True, linestyle='--', alpha=0.6)
 
 # Adjusting ticks and layout
-plt.xticks(fontsize=12)
+plt.xticks(fontsize=12, rotation=45, ha='right')  # Rotate labels for better readability
 plt.yticks(fontsize=12)
-plt.legend(title='Benchmark', title_fontsize=14,
-           fontsize=12, loc='upper right')
 plt.tight_layout()
 
 # Display the plot
 plt.show()
 
-# Correlation Matrix
+# Example: Correlation Matrix
 plt.figure(figsize=(10, 7))
-correlation_matrix = gpu_specs[[
-    'memSize', 'memBusWidth', 'gpuClock', 'memClock']].corr()
+correlation_matrix = combined_data[[
+    'memSize', 'memBusWidth', 'gpuClock', 'memClock', 'memoryBandwidth_GBs']].corr()
 sns.heatmap(correlation_matrix, annot=True,
             cmap='coolwarm', fmt='.2f', linewidths=1)
 plt.title('Correlation Matrix for Numerical Features', fontsize=18)
 plt.tight_layout()
 plt.show()
-
