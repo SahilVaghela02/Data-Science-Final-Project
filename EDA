@@ -378,5 +378,33 @@ best_xgb = XGBRegressor(
     objective='reg:squarederror',
     random_state=42
 )
+# ---- STEP 3: Train XGBoost with xgb.train() and Early Stopping ----
 
+# Convert the data into DMatrix format
+dtrain = xgb.DMatrix(X_train_scaled, label=y_train)
+dtest = xgb.DMatrix(X_test_scaled, label=y_test)
+
+# Set up the parameters for xgb.train()
+params = {
+    'learning_rate': best_params['learning_rate'],
+    'max_depth': best_params['max_depth'],
+    'min_child_weight': best_params['min_child_weight'],
+    'subsample': best_params['subsample'],
+    'colsample_bytree': best_params['colsample_bytree'],
+    'gamma': best_params['gamma'],
+    'objective': 'reg:squarederror',
+    'eval_metric': 'rmse'
+}
+
+# Specify the evaluation set
+evals = [(dtest, 'eval'), (dtrain, 'train')]
+
+# Train the model with early stopping
+num_round = best_params['n_estimators']
+early_stopping_rounds = 50  # Stop if validation score doesn't improve for 50 rounds
+bst = xgb.train(
+    params, dtrain, num_round, evals=evals,
+    early_stopping_rounds=early_stopping_rounds,
+    verbose_eval=True
+)
 
