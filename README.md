@@ -1,17 +1,15 @@
 ## Important Libraries
--Install important libraries such as 
--sklearn.metrics
--sklearn.preprocessing
--sklearn
--xgboost
--sklearn.model_selection
--numpy
--pandas
--matplotlib.pyplot
--seaborn
--fuzzywuzzy
-
-
+- sklearn.metrics
+- sklearn.preprocessing
+- sklearn.model_selection
+- sklearn.ensemble
+- sklearn.linear_model
+- pandas
+- numpy
+- matplotlib.pyplot
+- seaborn
+- fuzzywuzzy
+- xgboost
 
 ## Overview
 This project focuses on analyzing GPU specifications and modeling CUDA benchmark scores using machine learning techniques. 
