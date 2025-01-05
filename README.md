@@ -45,3 +45,7 @@ It integrates multiple datasets, performs data preprocessing, exploratory data a
 ## Limitations:
 - There are certain limitations for this project the first one is dataset which has more details like TDP and Thermal Performance.
 - There were no full specifications on which the GPU was tested i.e. with which CPU it was paired and how much was the memory avaiable while testing for benchmarks.
+
+## Future Work:
+- Future research could expand the dataset to GPUs from multiple manufacturers and release periods for broader performance analysis.
+- Exploring deep learning models may reveal complex feature interactions, while examining CUDA's real-world impact in AI training, simulations, and gaming could validate and extend these findings.
