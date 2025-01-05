@@ -1,15 +1,15 @@
 ## Important Libraries
-Install important libraries such as 
-sklearn.metrics
-sklearn.preprocessing
-sklearn
-xgboost
-sklearn.model_selection
-numpy
-pandas
-matplotlib.pyplot
-seaborn
-
+-Install important libraries such as 
+-sklearn.metrics
+-sklearn.preprocessing
+-sklearn
+-xgboost
+-sklearn.model_selection
+-numpy
+-pandas
+-matplotlib.pyplot
+-seaborn
+-fuzzywuzzy
 
 
 
